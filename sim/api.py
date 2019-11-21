@@ -15,6 +15,10 @@ NullAddress = None
 simlog = core.simlog
 userlog = core.userlog
 
+def viewRtables(switches):
+    for switch in switches:
+        print(get_name(switch), ":", switch.rtable)
+
 
 def get_name(entity):
     """Returns the name of an entity, if possible."""

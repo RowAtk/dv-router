@@ -20,6 +20,10 @@ class DVRouter(basics.DVRouterBase):
 
         """
         self.start_timer()  # Starts calling handle_timer() at correct rate
+        self.platencies = {}
+        self.rtable = {}
+        self.dv_matrix = {}
+        self.INFINITY = INFINITY
 
     def handle_link_up(self, port, latency):
         """
@@ -29,6 +33,7 @@ class DVRouter(basics.DVRouterBase):
         in.
 
         """
+        self.platencies[port] = latency
         pass
 
     def handle_link_down(self, port):
@@ -38,6 +43,7 @@ class DVRouter(basics.DVRouterBase):
         The port number used by the link is passed in.
 
         """
+        self.platencies[port] = self.INFINITY
         pass
 
     def handle_rx(self, packet, port):
@@ -58,7 +64,9 @@ class DVRouter(basics.DVRouterBase):
         else:
             # Totally wrong behavior for the sake of demonstration only: send
             # the packet back to where it came from!
-            self.send(packet, port=port)
+            # self.send(packet, port=port)
+
+            
 
     def handle_timer(self):
         """
@@ -69,4 +77,14 @@ class DVRouter(basics.DVRouterBase):
         have expired.
 
         """
+        pass
+
+
+    def update_matrix(self):
+        pass
+
+    def update_rtable(self):
+        pass
+
+    def optimal_route(self, vector):
         pass
