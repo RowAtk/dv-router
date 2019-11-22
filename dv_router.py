@@ -14,11 +14,16 @@ class DVector:
 
     def add(self, x, latency):
         self.latencies[api.get_name(x)] = latency
-    """
+    
     def update(self, x, latency):
         name = api.get_name(x)
-        # if name in self. 
-    """
+        if self.isNode(x):
+            self.latencies[name] = latency
+        else:
+            self.add(x, latency)
+
+    def isNode(self, v):
+        return v in self.latencies
 
     def get(self, x):
         return self.latencies[api.get_name(x)]
@@ -39,12 +44,30 @@ class DMatrix:
     def filter(self, port):
         pass
 
+    def __repr__(self):
+        string = ""
+        for vname, latencies in self.vectors:
+            string += "%s: <%s>\n" % (vname, str(latencies)) 
+        return string
+
 class RTable:
     def __init__(self, x={}):
         self.table = x
 
     def add(self, interface, port):
         self.table[interface] = port
+
+    def isEntry(self, src):
+        return src in self.table
+
+    def get(self, interface):
+        return self.table[interface]
+
+    def __repr__(self):
+        string = "RTABLE Entries\n"
+        for i, p in self.table:
+            string += "%s -> port %s\n" % (i, p)
+        return string
 
 
 class DVRouter(basics.DVRouterBase):
@@ -103,22 +126,22 @@ class DVRouter(basics.DVRouterBase):
 
         #self.log("RX %s on %s (%s)", packet, port, api.current_time())
         if isinstance(packet, basics.RoutePacket):
-            self.dv_matrix
+            self.dv_matrix.get(src).update(dest)
             pass
-        elif isinstance(packet, basics.HostDiscoveryPacket) or not self.isEntry(src):
+        elif isinstance(packet, basics.HostDiscoveryPacket) or not self.rtable.isEntry(src):
             self.discover(src, port)
         else:
             # Totally wrong behavior for the sake of demonstration only: send
             # the packet back to where it came from!
             # self.send(packet, port=port)
             if not self.is_for_me(dest):
-                if self.isEntry(dest):
+                if self.rtable.isEntry(dest):
                     # destination is known
-                    self.speak(f"{dest} is a known")
-                    self.send(packet, self.get_port(dest))
+                    self.speak("%s is known" % (dest))
+                    self.send(packet, self.get_out_port(dest))
                 else:
                     # destination is unknown
-                    self.speak(f"{dest} is unknown to me")
+                    self.speak("%s is unknown to me" % (dest))
             else:
                 print("packet has no destination or is... FOR ME!!")
 
@@ -160,19 +183,18 @@ class DVRouter(basics.DVRouterBase):
         return src, dest
 
     def discover(self, src, port):
-        if src not in self.rtable:
-            self.speak(f"Source entity: {src} is unknown")
+        if not self.rtable.isEntry(src):
+            self.speak("Source entity: %s is unknown" % (src))
             self.rtable.add(src, port)
-            self.dv_matrix.add(DVector(src))
+            v = DVector(src)
+            print(v.src, v.latencies)
+            self.dv_matrix.add(v)
 
-    def isEntry(self, src):
-        return src in self.rtable
-
-    def get_port(self, dest):
-        return self.rtable[dest]
+    def get_out_port(self, dest):
+        return self.rtable.get(dest)
 
     def speak(self, msg):
-        print(api.get_name(self.name), "says:", msg)
+        print ("%s says: %s" % (api.get_name(self.name), msg)) 
 
     def is_for_me(self, dest):
         return dest and dest == api.get_name(self)
