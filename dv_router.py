@@ -123,6 +123,8 @@ class DVRouter(basics.DVRouterBase):
 
         # extract source and destination from packet
         src, dest = self.getOrigins(packet)
+        
+        self.speak("Incoming packet: %s | src: %s | dest: %s | port: %s | trace: %s" % (str(type(packet)).split('.')[-1], src, dest, port, packet.trace))
 
         #self.log("RX %s on %s (%s)", packet, port, api.current_time())
         if isinstance(packet, basics.RoutePacket):
@@ -143,7 +145,7 @@ class DVRouter(basics.DVRouterBase):
                     # destination is unknown
                     self.speak("%s is unknown to me" % (dest))
             else:
-                print("packet has no destination or is... FOR ME!!")
+                self.speak("packet has no destination or is... FOR ME!!")
 
 
                        
@@ -184,17 +186,17 @@ class DVRouter(basics.DVRouterBase):
 
     def discover(self, src, port):
         if not self.rtable.isEntry(src):
-            self.speak("Source entity: %s is unknown" % (src))
+            self.speak("Source entity %s is unknown" % (src))
             self.rtable.add(src, port)
             v = DVector(src)
-            print(v.src, v.latencies)
+            self.speak(self.dv_matrix)
             self.dv_matrix.add(v)
 
     def get_out_port(self, dest):
         return self.rtable.get(dest)
 
     def speak(self, msg):
-        print ("%s says: %s" % (api.get_name(self.name), msg)) 
+        print ("\n%s says: %s\n" % (api.get_name(self.name), msg)) 
 
     def is_for_me(self, dest):
         return dest and dest == api.get_name(self)
